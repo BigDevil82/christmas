@@ -12,10 +12,13 @@ const ChristmasTree = () => {
   const groupRef = useRef();
   const { viewport } = useThree();
   
-  // Generate data
-  const count = 5000;
-  const particleData = useMemo(() => generateTreeParticles(count), []);
-  const ornamentData = useMemo(() => generateOrnaments(300), []);
+  // Generate data with mobile optimization
+  const isMobile = viewport.width < 5; // Detect mobile
+  const count = isMobile ? 1500 : 5000; // Reduce particles for mobile
+  const ornamentCount = isMobile ? 100 : 300; // Reduce ornaments for mobile
+  
+  const particleData = useMemo(() => generateTreeParticles(count), [count]);
+  const ornamentData = useMemo(() => generateOrnaments(ornamentCount), [ornamentCount]);
   const nebulaLayout = useMemo(() => generateNebulaLayout(24), []);
   
   // Animation state
@@ -149,10 +152,24 @@ const ChristmasTree = () => {
     <group ref={groupRef} scale={0.8} position={[0, -0.3, 0]}>
       {/* Particles - Fragments */}
       <instancedMesh ref={meshRef} args={[null, null, count]}>
-        <tetrahedronGeometry args={[0.02, 0]}>
+        {isMobile ? (
+          // Simpler geometry for mobile
+          <boxGeometry args={[0.02, 0.02, 0.02]}>
             <instancedBufferAttribute attach="attributes-color" args={[colorArray, 3]} />
-        </tetrahedronGeometry>
-        <meshStandardMaterial vertexColors roughness={0.2} metalness={0.8} emissive="#111" emissiveIntensity={0.5} />
+          </boxGeometry>
+        ) : (
+          // Complex geometry for desktop
+          <tetrahedronGeometry args={[0.02, 0]}>
+            <instancedBufferAttribute attach="attributes-color" args={[colorArray, 3]} />
+          </tetrahedronGeometry>
+        )}
+        <meshStandardMaterial 
+          vertexColors 
+          roughness={isMobile ? 0.5 : 0.2} 
+          metalness={isMobile ? 0.5 : 0.8} 
+          emissive="#111" 
+          emissiveIntensity={isMobile ? 0.2 : 0.5} 
+        />
       </instancedMesh>
 
       {/* Ornaments - Only visible in Tree phase or exploding */}
